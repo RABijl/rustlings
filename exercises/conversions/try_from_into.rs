@@ -10,6 +10,7 @@
 // a hint.
 
 use std::convert::{TryFrom, TryInto};
+use std::num::TryFromIntError;
 
 #[derive(Debug, PartialEq)]
 struct Color {
@@ -27,7 +28,15 @@ enum IntoColorError {
     IntConversion,
 }
 
-// I AM NOT DONE
+// could have been done with map_err, but this is what i came up with first
+fn to_into_color_error(result: Result<u8,TryFromIntError>) ->Result<u8, IntoColorError> {
+    match result {
+        Ok(val) => Ok(val),
+        Err(_) => Err(IntoColorError::IntConversion)
+    }
+}
+
+
 
 // Your task is to complete this implementation and return an Ok result of inner
 // type Color. You need to create an implementation for a tuple of three
@@ -41,6 +50,11 @@ enum IntoColorError {
 impl TryFrom<(i16, i16, i16)> for Color {
     type Error = IntoColorError;
     fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {
+
+        let a =tuple.0;
+        Ok(Color {red: to_into_color_error(tuple.0.try_into())?,
+               green: to_into_color_error(tuple.1.try_into())?,
+               blue: to_into_color_error(tuple.2.try_into())?})
     }
 }
 
@@ -48,6 +62,11 @@ impl TryFrom<(i16, i16, i16)> for Color {
 impl TryFrom<[i16; 3]> for Color {
     type Error = IntoColorError;
     fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {
+        Ok(Color {
+            red: to_into_color_error(arr[0].try_into())?,
+            green: to_into_color_error(arr[1].try_into())?,
+            blue:  to_into_color_error(arr[2].try_into())?
+        })
     }
 }
 
@@ -55,6 +74,15 @@ impl TryFrom<[i16; 3]> for Color {
 impl TryFrom<&[i16]> for Color {
     type Error = IntoColorError;
     fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {
+        if slice.len() != 3 {
+            return Err(IntoColorError::BadLen);
+        }
+
+        Ok(Color {
+            red: to_into_color_error(slice[0].try_into())?,
+            green: to_into_color_error(slice[1].try_into())?,
+            blue:  to_into_color_error(slice[2].try_into())?
+        })
     }
 }
 
